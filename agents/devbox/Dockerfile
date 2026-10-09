@@ -11,7 +11,9 @@
 #
 # Base: https://github.com/kubeopencode/kubeopencode/tree/main/agents/devbox
 
-FROM ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest
+# Pinned by digest (resolved from ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest
+# at build time). Bump deliberately when bumping UV_VERSION/SERENA_VERSION.
+FROM ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest@sha256:66d36238d9c8a4adf54b72a01af096f5aaefd7e0bf115f3af9287dd1af91a355
 
 # Versions (kept in sync with .github/workflows/build.yml env)
 ARG UV_VERSION=0.13.0
@@ -30,8 +32,10 @@ RUN pip install --break-system-packages --no-cache-dir uv==${UV_VERSION}
 # non-root runtime user (HOME=/tmp, UID 1000:0)
 ENV UV_TOOL_DIR=/usr/local/share/uv/tools \
     UV_TOOL_BIN_DIR=/usr/local/bin
+# Pin serena by commit hash (v1.7.0 = 949a27ef1e5fda1a6e7b561e777bcece345c6ffd);
+# git tags are mutable, commits are not.
 RUN uv tool install --python /usr/bin/python3 \
-      --from "git+https://github.com/oraios/serena@${SERENA_VERSION}" serena-agent
+      --from "git+https://github.com/oraios/serena@949a27ef1e5fda1a6e7b561e777bcece345c6ffd" serena-agent
 
 # Sanity checks + record versions.
 # HOME=/root so serena's state dir isn't created root-owned under the shared /tmp
