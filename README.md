@@ -14,9 +14,21 @@ the upstream Dockerfiles that download OpenCode `1.18.35`.
 | `ghcr.io/felixz92/kubeopencode-agent-opencode` | Init container: copies OpenCode binary to `/tools` |
 | `ghcr.io/felixz92/kubeopencode-agent-attach` | Lightweight Task Pod image for `--attach` mode |
 | `ghcr.io/felixz92/kubeopencode-agent-devbox` | Executor (worker) image: upstream devbox + `uv`/`uvx` + pre-installed Serena MCP server |
+| `ghcr.io/felixz92/kubeopencode-telegram-bot` | Standalone [opencode-telegram-bot](https://github.com/grinev/opencode-telegram-bot) image (Telegram client for an agent's `opencode serve`) |
 
 Tagged with the OpenCode version (`1.18.35`) and `latest`. Built for
 `linux/amd64` and `linux/arm64` by GitHub Actions (`.github/workflows/build.yml`).
+
+## opencode-telegram-bot image
+
+Upstream's GHCR package is private (anonymous pulls get 403), so this repo
+builds it from source, pinned to an upstream commit (`OTB_COMMIT` in
+`.github/workflows/build.yml`). The image is tagged `latest` and with the full
+commit SHA. To bump:
+
+1. Pick a commit from https://github.com/grinev/opencode-telegram-bot/commits/main
+2. Update `OTB_COMMIT` in `.github/workflows/build.yml` (and the Dockerfile `ARG`)
+3. Update the image tag in the homelab Telegram bot Deployment (`50_apps/kubeopencode/agents/tpl-go-mocks-telegram-bot.yaml`)
 
 ## Devbox image versioning (imagePullPolicy issue)
 
