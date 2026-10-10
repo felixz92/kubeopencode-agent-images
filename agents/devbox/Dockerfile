@@ -18,6 +18,9 @@ FROM ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest@sha256:66d36238d9c8a4
 # Versions (kept in sync with .github/workflows/build.yml env)
 ARG UV_VERSION=0.13.0
 ARG SERENA_VERSION=v1.7.0
+# golangci-lint: present in the upstream image but not on PATH; rebuilt from
+# source into /usr/local/bin. https://golangci-lint.run/docs/welcome/install/local/#install-from-sources
+ARG GOLANGCI_LINT_VERSION=v2.6.2
 
 # The base image switches to USER 1000:0; installs need root
 USER root
@@ -34,6 +37,10 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends task; \
     rm -rf /var/lib/apt/lists/*
+
+# golangci-lint from source, binary onto the global PATH
+RUN set -eux; \
+    GOBIN=/usr/local/bin go install "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}"
 
 # serena as a uv tool: tool venv lives in a shared, world-readable location,
 # the `serena` launcher binary goes on the global PATH so it works for the
@@ -54,7 +61,8 @@ RUN set -eux; \
     uvx --version; \
     serena --help >/dev/null; \
     task --version; \
-    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION}" > /image-extra-versions; \
+    golangci-lint version; \
+    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION}" > /image-extra-versions; \
     rm -rf /tmp/.serena /tmp/.cache/uv
 
 # Restore the base image's non-root runtime user
