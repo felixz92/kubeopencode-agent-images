@@ -39,6 +39,11 @@ stamp is printed in the build workflow summary/logs.
 2. Update `UV_VERSION` / `SERENA_VERSION` in `.github/workflows/build.yml` (and the Dockerfile defaults)
 3. Update the `executorImage` tag in the homelab Agent spec (`50_apps/kubeopencode/agents/agent.yaml`) to the new stamped tag
 
+## Bumping Go / Node (devbox image)
+
+The devbox image reinstalls Go and Node on top of the (older) upstream versions,
+from `GO_VERSION` / `NODE_VERSION` in `.github/workflows/build.yml` (defaults
+mirrored in `agents/devbox/Dockerfile`).
 
 ## Bumping OpenCode
 

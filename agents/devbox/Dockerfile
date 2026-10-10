@@ -16,11 +16,15 @@ ARG UV_VERSION=0.13.0
 ARG SERENA_VERSION=v1.7.0
 # golangci-lint: present in the upstream image but not on PATH; rebuilt from
 # source into /usr/local/bin. https://golangci-lint.run/docs/welcome/install/local/#install-from-sources
-ARG GOLANGCI_LINT_VERSION=v2.6.2
+ARG GOLANGCI_LINT_VERSION=v2.14.0
 # templ (a-h/templ): https://templ.guide/quick-start/installation
 ARG TEMPL_VERSION=v0.3.977
 # forgejo-mcp (git.b4mad.industries/agentic-forges/forgejo-mcp), prebuilt release binary
 ARG FORGEJO_MCP_VERSION=v3.2.0
+# Reinstall newer toolchains than the upstream image ships:
+# Go from the official release tarball, Node from NodeSource (apt)
+ARG GO_VERSION=1.26.9
+ARG NODE_VERSION=26
 
 # Pinned by digest (resolved from ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest
 # at build time). Bump deliberately when bumping UV_VERSION/SERENA_VERSION.
@@ -32,9 +36,27 @@ ARG SERENA_VERSION
 ARG GOLANGCI_LINT_VERSION
 ARG TEMPL_VERSION
 ARG FORGEJO_MCP_VERSION
+ARG GO_VERSION
+ARG NODE_VERSION
 
 # The base image switches to USER 1000:0; installs need root
 USER root
+
+# Go: reinstall from the official release tarball (upstream image ships an
+# older Go). Replaces /usr/local/go in place so PATH stays unchanged.
+# https://go.dev/doc/install
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    rm -rf /usr/local/go; \
+    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${arch}.tar.gz" \
+      | tar -xz -C /usr/local
+
+# Node: reinstall via NodeSource apt repository (upstream image ships an
+# older distro node)
+RUN set -eux; \
+    curl -fsSL "https://deb.nodesource.com/setup_${NODE_VERSION}.x" | bash -; \
+    apt-get install -y --no-install-recommends nodejs; \
+    rm -rf /var/lib/apt/lists/*
 
 # uv + uvx into /usr/local/bin
 # (--break-system-packages matches the pattern the devbox image itself uses
@@ -94,8 +116,10 @@ RUN set -eux; \
     task --version; \
     golangci-lint version; \
     templ version; \
+    go version; \
+    node --version; \
     forgejo-mcp --help >/dev/null; \
-    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / templ ${TEMPL_VERSION} / forgejo-mcp ${FORGEJO_MCP_VERSION}" > /image-extra-versions; \
+    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / templ ${TEMPL_VERSION} / forgejo-mcp ${FORGEJO_MCP_VERSION} / go ${GO_VERSION} / node ${NODE_VERSION}" > /image-extra-versions; \
     rm -rf /tmp/.serena /tmp/.cache/uv
 
 # Restore the base image's non-root runtime user
