@@ -18,11 +18,26 @@ the upstream Dockerfiles that download OpenCode `1.18.35`.
 Tagged with the OpenCode version (`1.18.35`) and `latest`. Built for
 `linux/amd64` and `linux/arm64` by GitHub Actions (`.github/workflows/build.yml`).
 
+## Devbox image versioning (imagePullPolicy issue)
+
+KubeOpenCode does not support `imagePullPolicy: Always` for the executor
+(devbox) image, so a mutable `:latest` tag is never refreshed on the cluster.
+The devbox image is therefore additionally tagged with a unique, monotonically
+increasing stamp per build:
+
+```
+uv<UV_VERSION>-serena<SERENA_VERSION>-<YYYYMMDD>-<run_number>
+```
+
+e.g. `uv0.13.0-serenav1.7.0-20261010-42`. Bumping this tag in the Agent spec
+(`executorImage`) is what makes the cluster pull the new image. The current
+stamp is printed in the build workflow summary/logs.
+
 ## Bumping uv / Serena (devbox image)
 
 1. Check https://github.com/astral-sh/uv/releases and https://github.com/oraios/serena/tags
 2. Update `UV_VERSION` / `SERENA_VERSION` in `.github/workflows/build.yml` (and the Dockerfile defaults)
-3. Update the `executorImage` tag in the homelab Agent spec (`50_apps/kubeopencode/agents/agent.yaml`)
+3. Update the `executorImage` tag in the homelab Agent spec (`50_apps/kubeopencode/agents/agent.yaml`) to the new stamped tag
 
 
 ## Bumping OpenCode
