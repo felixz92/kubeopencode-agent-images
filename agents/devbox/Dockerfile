@@ -27,6 +27,14 @@ USER root
 # for pylsp on Debian bookworm)
 RUN pip install --break-system-packages --no-cache-dir uv==${UV_VERSION}
 
+# Task (go-task) via the official Cloudsmith apt repository
+# https://taskfile.dev/docs/installation#apt
+RUN set -eux; \
+    curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.deb.sh' | bash; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends task; \
+    rm -rf /var/lib/apt/lists/*
+
 # serena as a uv tool: tool venv lives in a shared, world-readable location,
 # the `serena` launcher binary goes on the global PATH so it works for the
 # non-root runtime user (HOME=/tmp, UID 1000:0)
@@ -45,6 +53,7 @@ RUN set -eux; \
     uv --version; \
     uvx --version; \
     serena --help >/dev/null; \
+    task --version; \
     echo "uv ${UV_VERSION} / serena ${SERENA_VERSION}" > /image-extra-versions; \
     rm -rf /tmp/.serena /tmp/.cache/uv
 
