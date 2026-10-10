@@ -11,10 +11,6 @@
 #
 # Base: https://github.com/kubeopencode/kubeopencode/tree/main/agents/devbox
 
-# Pinned by digest (resolved from ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest
-# at build time). Bump deliberately when bumping UV_VERSION/SERENA_VERSION.
-FROM ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest@sha256:66d36238d9c8a4adf54b72a01af096f5aaefd7e0bf115f3af9287dd1af91a355
-
 # Versions (kept in sync with .github/workflows/build.yml env)
 ARG UV_VERSION=0.13.0
 ARG SERENA_VERSION=v1.7.0
@@ -23,6 +19,29 @@ ARG SERENA_VERSION=v1.7.0
 ARG GOLANGCI_LINT_VERSION=v2.6.2
 # templ (a-h/templ): https://templ.guide/quick-start/installation
 ARG TEMPL_VERSION=v0.3.977
+# forgejo-mcp (git.b4mad.industries/agentic-forges/forgejo-mcp), prebuilt release binary
+ARG FORGEJO_MCP_VERSION=v3.2.0
+# forgejo-cli (codeberg.org/forgejo-contrib/forgejo-cli), built from source
+# (prebuilt release binary requires GLIBC 2.39; base image is bookworm/glibc 2.36)
+ARG FORGEJO_CLI_VERSION=v0.6.0
+
+# Build stage for forgejo-cli: rust:1 is Debian bookworm-based, matching the
+# runtime image's glibc so the compiled binary runs there.
+FROM rust:1 AS forgejo-cli-build
+ARG FORGEJO_CLI_VERSION
+RUN cargo install --locked --version "${FORGEJO_CLI_VERSION#v}" forgejo-cli
+
+# Pinned by digest (resolved from ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest
+# at build time). Bump deliberately when bumping UV_VERSION/SERENA_VERSION.
+FROM ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest@sha256:66d36238d9c8a4adf54b72a01af096f5aaefd7e0bf115f3af9287dd1af91a355
+
+# Versions are declared as global ARGs above; re-declare the ones used below.
+ARG UV_VERSION
+ARG SERENA_VERSION
+ARG GOLANGCI_LINT_VERSION
+ARG TEMPL_VERSION
+ARG FORGEJO_MCP_VERSION
+ARG FORGEJO_CLI_VERSION
 
 # The base image switches to USER 1000:0; installs need root
 USER root
@@ -58,6 +77,16 @@ RUN set -eux; \
     curl -fsSL "https://github.com/a-h/templ/releases/download/${TEMPL_VERSION}/templ_Linux_${tarch}.tar.gz" \
       | tar -xz -C /usr/local/bin templ
 
+# forgejo-mcp: prebuilt release binary onto the global PATH
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    curl -fsSL "https://git.b4mad.industries/agentic-forges/forgejo-mcp/releases/download/${FORGEJO_MCP_VERSION}/forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}.tar.gz" \
+      | tar -xz --strip-components=1 -C /usr/local/bin "forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}/forgejo-mcp"
+
+# forgejo-cli: compiled in the rust build stage above (the prebuilt release
+# binary needs a newer glibc than the base image provides)
+COPY --from=forgejo-cli-build /usr/local/cargo/bin/fj /usr/local/bin/fj
+
 # serena as a uv tool: tool venv lives in a shared, world-readable location,
 # the `serena` launcher binary goes on the global PATH so it works for the
 # non-root runtime user (HOME=/tmp, UID 1000:0)
@@ -79,7 +108,9 @@ RUN set -eux; \
     task --version; \
     golangci-lint version; \
     templ version; \
-    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / templ ${TEMPL_VERSION}" > /image-extra-versions; \
+    forgejo-mcp --help >/dev/null; \
+    fj --version; \
+    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / templ ${TEMPL_VERSION} / forgejo-mcp ${FORGEJO_MCP_VERSION} / forgejo-cli ${FORGEJO_CLI_VERSION}" > /image-extra-versions; \
     rm -rf /tmp/.serena /tmp/.cache/uv
 
 # Restore the base image's non-root runtime user

@@ -20,6 +20,8 @@ env:
   SERENA_VERSION: "v1.7.0"
   GOLANGCI_LINT_VERSION: "v2.6.2"
   TEMPL_VERSION: "v0.3.977"
+  FORGEJO_MCP_VERSION: "v3.2.0"
+  FORGEJO_CLI_VERSION: "v0.6.0"
 
 jobs:
   opencode:
