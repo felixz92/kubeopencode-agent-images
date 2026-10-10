@@ -22,7 +22,7 @@ ARG SERENA_VERSION=v1.7.0
 # source into /usr/local/bin. https://golangci-lint.run/docs/welcome/install/local/#install-from-sources
 ARG GOLANGCI_LINT_VERSION=v2.6.2
 # templ (a-h/templ): https://templ.guide/quick-start/installation
-ARG TEMPL_VERSION=v0.3.949
+ARG TEMPL_VERSION=v0.3.977
 
 # The base image switches to USER 1000:0; installs need root
 USER root
@@ -40,13 +40,23 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends task; \
     rm -rf /var/lib/apt/lists/*
 
-# golangci-lint from source, binary onto the global PATH
+# golangci-lint: prebuilt release binary onto the global PATH.
+# (Building from source segfaults in go's assembler under QEMU/Rosetta when
+# cross-building multi-arch, so we use the official release tarball instead:
+# https://golangci-lint.run/docs/welcome/install/local/#install-from-binary-releases)
 RUN set -eux; \
-    GOBIN=/usr/local/bin go install "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}"
+    arch="$(dpkg --print-architecture)"; \
+    ver="${GOLANGCI_LINT_VERSION#v}"; \
+    curl -fsSL "https://github.com/golangci/golangci-lint/releases/download/${GOLANGCI_LINT_VERSION}/golangci-lint-${ver}-linux-${arch}.tar.gz" \
+      | tar -xz --strip-components=1 -C /usr/local/bin "golangci-lint-${ver}-linux-${arch}/golangci-lint"
 
-# templ from source, binary onto the global PATH
+# templ: prebuilt release binary onto the global PATH
+# (same emulation concern as golangci-lint; templ ships release binaries)
 RUN set -eux; \
-    GOBIN=/usr/local/bin go install "github.com/a-h/templ/cmd/templ@${TEMPL_VERSION}"
+    arch="$(dpkg --print-architecture)"; \
+    case "${arch}" in amd64) tarch=x86_64 ;; arm64) tarch=arm64 ;; esac; \
+    curl -fsSL "https://github.com/a-h/templ/releases/download/${TEMPL_VERSION}/templ_Linux_${tarch}.tar.gz" \
+      | tar -xz -C /usr/local/bin templ
 
 # serena as a uv tool: tool venv lives in a shared, world-readable location,
 # the `serena` launcher binary goes on the global PATH so it works for the
