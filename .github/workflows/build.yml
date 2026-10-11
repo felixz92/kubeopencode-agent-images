@@ -23,6 +23,16 @@ env:
   GOLANGCI_LINT_VERSION: "v2.14.0"
   TEMPL_VERSION: "v0.3.977"
   FORGEJO_MCP_VERSION: "v3.2.0"
+  # homelab executor image (agents/homelab)
+  KUBECTL_VERSION: "1.37.1"
+  FLUX_VERSION: "2.9.6"
+  TERRAFORM_VERSION: "1.16.5"
+  TALOSCTL_VERSION: "1.13.11"
+  KREW_VERSION: "v0.5.0"
+  K8S_MCP_VERSION: "0.0.67"
+  FLUX_OPERATOR_MCP_VERSION: "0.61.0"
+  MCP_GRAFANA_VERSION: "2.0.2"
+  MCP_VICTORIALOGS_VERSION: "1.9.0"
   # opencode-telegram-bot: upstream commit to build from (upstream GHCR package
   # is private, so we build our own image)
   OTB_COMMIT: "2801cb8c5d703d7c45f830c1c74a8805355e5749"
@@ -106,6 +116,46 @@ jobs:
       - name: Summary
         run: |
           echo "executorImage: ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-devbox:uv${UV_VERSION}-serena${SERENA_VERSION}-${{ steps.stamp.outputs.stamp }}" >> "$GITHUB_STEP_SUMMARY"
+
+  homelab:
+    runs-on: ubuntu-latest
+    outputs:
+      stamp: ${{ steps.stamp.outputs.stamp }}
+    steps:
+      - id: stamp
+        run: |
+          # Same imagePullPolicy caveat as the devbox image: executor images
+          # must be referenced by an immutable tag that changes per build.
+          echo "stamp=$(date -u +%Y%m%d)-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: agents/homelab
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            KUBECTL_VERSION=${{ env.KUBECTL_VERSION }}
+            FLUX_VERSION=${{ env.FLUX_VERSION }}
+            TERRAFORM_VERSION=${{ env.TERRAFORM_VERSION }}
+            TALOSCTL_VERSION=${{ env.TALOSCTL_VERSION }}
+            KREW_VERSION=${{ env.KREW_VERSION }}
+            K8S_MCP_VERSION=${{ env.K8S_MCP_VERSION }}
+            FLUX_OPERATOR_MCP_VERSION=${{ env.FLUX_OPERATOR_MCP_VERSION }}
+            MCP_GRAFANA_VERSION=${{ env.MCP_GRAFANA_VERSION }}
+            MCP_VICTORIALOGS_VERSION=${{ env.MCP_VICTORIALOGS_VERSION }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-homelab:latest
+            ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-homelab:tf${{ env.TERRAFORM_VERSION }}-talosctl${{ env.TALOSCTL_VERSION }}
+            ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-homelab:tf${{ env.TERRAFORM_VERSION }}-talosctl${{ env.TALOSCTL_VERSION }}-${{ steps.stamp.outputs.stamp }}
+      - name: Summary
+        run: |
+          echo "executorImage: ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-homelab:tf${TERRAFORM_VERSION}-talosctl${TALOSCTL_VERSION}-${{ steps.stamp.outputs.stamp }}" >> "$GITHUB_STEP_SUMMARY"
 
   opencode-telegram-bot:
     runs-on: ubuntu-latest

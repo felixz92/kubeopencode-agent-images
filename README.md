@@ -14,6 +14,7 @@ the upstream Dockerfiles that download OpenCode `1.18.35`.
 | `ghcr.io/felixz92/kubeopencode-agent-opencode` | Init container: copies OpenCode binary to `/tools` |
 | `ghcr.io/felixz92/kubeopencode-agent-attach` | Lightweight Task Pod image for `--attach` mode |
 | `ghcr.io/felixz92/kubeopencode-agent-devbox` | Executor (worker) image: upstream devbox + `uv`/`uvx` + pre-installed Serena MCP server |
+| `ghcr.io/felixz92/kubeopencode-agent-homelab` | Executor (worker) image for homelab ops: Debian bookworm + kubectl/krew (cnpg, cert-manager plugins), Flux CLI, Terraform, talosctl, and pre-installed MCP servers (kubernetes-mcp-server, flux-operator-mcp, mcp-grafana, mcp-victorialogs) |
 | `ghcr.io/felixz92/kubeopencode-telegram-bot` | Standalone [opencode-telegram-bot](https://github.com/grinev/opencode-telegram-bot) image (Telegram client for an agent's `opencode serve`) |
 
 Tagged with the OpenCode version (`1.18.35`) and `latest`. Built for
@@ -62,6 +63,32 @@ mirrored in `agents/devbox/Dockerfile`).
 1. Check https://github.com/anomalyco/opencode/releases
 2. Update `OPENCODE_VERSION` in `.github/workflows/build.yml` (and the Dockerfile defaults)
 3. Update the image tag in the homelab Agent spec (`50_apps/kubeopencode/agents/agent.yaml`)
+
+## Homelab executor image (kubeopencode-agent-homelab)
+
+Standalone Debian bookworm executor image (`agents/homelab/Dockerfile`) with
+`kubectl` (+ krew with `cnpg` and `cert-manager` plugins), Flux CLI, Terraform,
+talosctl, and the MCP servers `kubernetes-mcp-server`,
+`flux-operator-mcp` (controlplaneio-fluxcd/flux-operator), `mcp-grafana`, and
+`mcp-victorialogs` (VictoriaMetrics/mcp-victorialogs) pre-installed. Note: the
+VictoriaLogs MCP server is `VictoriaMetrics/mcp-victorialogs` (not the retired
+`VictoriaMetrics-Community/victorialogs-mcp` path) and requires
+`VL_INSTANCE_ENTRYPOINT` to be set at runtime. OpenCode itself is provisioned
+by the `kubeopencode-agent-opencode` init container into `/tools`. It is tagged
+with the same monotonically increasing stamp scheme as the devbox image:
+
+```
+tf<TERRAFORM_VERSION>-talosctl<TALOSCTL_VERSION>-<YYYYMMDD>-<run_number>
+```
+
+### Bumping homelab image tools
+
+1. Update `KUBECTL_VERSION` / `FLUX_VERSION` / `TERRAFORM_VERSION` /
+   `TALOSCTL_VERSION` / `KREW_VERSION` / `K8S_MCP_VERSION` /
+   `FLUX_OPERATOR_MCP_VERSION` / `MCP_GRAFANA_VERSION` /
+   `MCP_VICTORIALOGS_VERSION` in `.github/workflows/build.yml`
+   (defaults mirrored in `agents/homelab/Dockerfile`)
+2. Update the `executorImage` tag in the homelab Agent spec to the new stamped tag
 
 ## Usage (homelab)
 
