@@ -76,7 +76,7 @@ RUN set -eux; \
       | tar -xz -C /out mcp-victorialogs; \
     chmod +x /out/*
 
-FROM debian:bookworm
+FROM debian:trixie
 
 ARG KUBECTL_VERSION
 ARG FLUX_VERSION
