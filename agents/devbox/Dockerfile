@@ -21,6 +21,8 @@ ARG GOLANGCI_LINT_VERSION=v2.14.0
 ARG TEMPL_VERSION=v0.3.977
 # forgejo-mcp (git.b4mad.industries/agentic-forges/forgejo-mcp), prebuilt release binary
 ARG FORGEJO_MCP_VERSION=v3.2.0
+# open-code-review (https://github.com/alibaba/open-code-review) via npm
+ARG OPEN_CODE_REVIEW_VERSION=1.12.13
 # Reinstall newer toolchains than the upstream image ships:
 # Go from the official release tarball, Node from NodeSource (apt)
 ARG GO_VERSION=1.26.9
@@ -36,6 +38,7 @@ ARG SERENA_VERSION
 ARG GOLANGCI_LINT_VERSION
 ARG TEMPL_VERSION
 ARG FORGEJO_MCP_VERSION
+ARG OPEN_CODE_REVIEW_VERSION
 ARG GO_VERSION
 ARG NODE_VERSION
 
@@ -95,6 +98,10 @@ RUN set -eux; \
     curl -fsSL "https://git.b4mad.industries/agentic-forges/forgejo-mcp/releases/download/${FORGEJO_MCP_VERSION}/forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}.tar.gz" \
       | tar -xz --strip-components=1 -C /usr/local/bin "forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}/forgejo-mcp"
 
+# open-code-review: global npm package (npm was installed above).
+# Binary on PATH is `ocr`.
+RUN npm install -g @alibaba-group/open-code-review@${OPEN_CODE_REVIEW_VERSION}
+
 # serena as a uv tool: tool venv lives in a shared, world-readable location,
 # the `serena` launcher binary goes on the global PATH so it works for the
 # non-root runtime user (HOME=/tmp, UID 1000:0)
@@ -119,7 +126,8 @@ RUN set -eux; \
     go version; \
     node --version; \
     forgejo-mcp --help >/dev/null; \
-    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / templ ${TEMPL_VERSION} / forgejo-mcp ${FORGEJO_MCP_VERSION} / go ${GO_VERSION} / node ${NODE_VERSION}" > /image-extra-versions; \
+    ocr --help >/dev/null; \
+    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / templ ${TEMPL_VERSION} / forgejo-mcp ${FORGEJO_MCP_VERSION} / open-code-review ${OPEN_CODE_REVIEW_VERSION} / go ${GO_VERSION} / node ${NODE_VERSION}" > /image-extra-versions; \
     rm -rf /tmp/.serena /tmp/.cache/uv
 
 # Restore the base image's non-root runtime user
