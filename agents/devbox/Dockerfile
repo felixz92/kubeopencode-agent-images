@@ -58,7 +58,7 @@ RUN set -eux; \
 # older distro node)
 RUN set -eux; \
     curl -fsSL "https://deb.nodesource.com/setup_${NODE_VERSION}.x" | bash -; \
-    apt-get install -y --no-install-recommends nodejs; \
+    apt-get install -y --no-install-recommends nodejs ripgrep; \
     rm -rf /var/lib/apt/lists/*
 
 # uv + uvx into /usr/local/bin

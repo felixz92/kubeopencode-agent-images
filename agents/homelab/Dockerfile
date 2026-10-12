@@ -106,6 +106,7 @@ RUN set -eux; \
       unzip \
       jq \
       bash-completion \
+      ripgrep \
     ; \
     rm -rf /var/lib/apt/lists/*
 
