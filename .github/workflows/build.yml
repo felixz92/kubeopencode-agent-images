@@ -181,7 +181,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v7
         with:
-          context: builder
+          context: builder/golang
           platforms: linux/amd64,linux/arm64
           push: true
           build-args: |
@@ -194,6 +194,39 @@ jobs:
       - name: Summary
         run: |
           echo "executorImage: ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-builder:go${GO_VERSION}-task${TASK_VERSION}-${{ steps.stamp.outputs.stamp }}" >> "$GITHUB_STEP_SUMMARY"
+
+  builder-nodejs:
+    runs-on: ubuntu-latest
+    outputs:
+      stamp: ${{ steps.stamp.outputs.stamp }}
+    steps:
+      - id: stamp
+        run: |
+          # Same imagePullPolicy caveat as the devbox image: executor images
+          # must be referenced by an immutable tag that changes per build.
+          echo "stamp=$(date -u +%Y%m%d)-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: builder/nodejs
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            NODE_VERSION=${{ env.NODE_VERSION }}
+            OPEN_CODE_REVIEW_VERSION=${{ env.OPEN_CODE_REVIEW_VERSION }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/argo-nodejs-builder:latest
+            ghcr.io/${{ github.repository_owner }}/argo-nodejs-builder:node${{ env.NODE_VERSION }}-ocr${{ env.OPEN_CODE_REVIEW_VERSION }}
+            ghcr.io/${{ github.repository_owner }}/argo-nodejs-builder:node${{ env.NODE_VERSION }}-ocr${{ env.OPEN_CODE_REVIEW_VERSION }}-${{ steps.stamp.outputs.stamp }}
+      - name: Summary
+        run: |
+          echo "executorImage: ghcr.io/${{ github.repository_owner }}/argo-nodejs-builder:node${NODE_VERSION}-ocr${OPEN_CODE_REVIEW_VERSION}-${{ steps.stamp.outputs.stamp }}" >> "$GITHUB_STEP_SUMMARY"
 
   opencode-telegram-bot:
     runs-on: ubuntu-latest
