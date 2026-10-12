@@ -24,6 +24,8 @@ env:
   TEMPL_VERSION: "v0.3.977"
   FORGEJO_MCP_VERSION: "v3.2.0"
   OPEN_CODE_REVIEW_VERSION: "1.12.13"
+  # CI executor image (builder/)
+  TASK_VERSION: "3.45.4"
   # homelab executor image (agents/homelab)
   KUBECTL_VERSION: "1.37.1"
   FLUX_VERSION: "2.9.6"
@@ -159,6 +161,39 @@ jobs:
       - name: Summary
         run: |
           echo "executorImage: ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-homelab:tf${TERRAFORM_VERSION}-talosctl${TALOSCTL_VERSION}-${{ steps.stamp.outputs.stamp }}" >> "$GITHUB_STEP_SUMMARY"
+
+  builder:
+    runs-on: ubuntu-latest
+    outputs:
+      stamp: ${{ steps.stamp.outputs.stamp }}
+    steps:
+      - id: stamp
+        run: |
+          # Same imagePullPolicy caveat as the devbox image: executor images
+          # must be referenced by an immutable tag that changes per build.
+          echo "stamp=$(date -u +%Y%m%d)-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: builder
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            TASK_VERSION=${{ env.TASK_VERSION }}
+            GOLANGCI_LINT_VERSION=${{ env.GOLANGCI_LINT_VERSION }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/argo-golang-builder:latest
+            ghcr.io/${{ github.repository_owner }}/argo-golang-builder:go${{ env.GO_VERSION }}-task${{ env.TASK_VERSION }}
+            ghcr.io/${{ github.repository_owner }}/argo-golang-builder:go${{ env.GO_VERSION }}-task${{ env.TASK_VERSION }}-${{ steps.stamp.outputs.stamp }}
+      - name: Summary
+        run: |
+          echo "executorImage: ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-builder:go${GO_VERSION}-task${TASK_VERSION}-${{ steps.stamp.outputs.stamp }}" >> "$GITHUB_STEP_SUMMARY"
 
   opencode-telegram-bot:
     runs-on: ubuntu-latest
