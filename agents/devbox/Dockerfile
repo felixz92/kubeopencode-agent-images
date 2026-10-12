@@ -23,6 +23,8 @@ ARG TEMPL_VERSION=v0.3.977
 ARG FORGEJO_MCP_VERSION=v3.2.0
 # open-code-review (https://github.com/alibaba/open-code-review) via npm
 ARG OPEN_CODE_REVIEW_VERSION=1.12.13
+# openspec (https://github.com/Fission-AI/OpenSpec) via npm
+ARG OPENSPEC_VERSION=1.13.2
 # Reinstall newer toolchains than the upstream image ships:
 # Go from the official release tarball, Node from NodeSource (apt)
 ARG GO_VERSION=1.26.9
@@ -39,6 +41,7 @@ ARG GOLANGCI_LINT_VERSION
 ARG TEMPL_VERSION
 ARG FORGEJO_MCP_VERSION
 ARG OPEN_CODE_REVIEW_VERSION
+ARG OPENSPEC_VERSION
 ARG GO_VERSION
 ARG NODE_VERSION
 
@@ -102,6 +105,9 @@ RUN set -eux; \
 # Binary on PATH is `ocr`.
 RUN npm install -g @alibaba-group/open-code-review@${OPEN_CODE_REVIEW_VERSION}
 
+# openspec: global npm package. Binary on PATH is `openspec`.
+RUN npm install -g @fission-ai/openspec@${OPENSPEC_VERSION}
+
 # serena as a uv tool: tool venv lives in a shared, world-readable location,
 # the `serena` launcher binary goes on the global PATH so it works for the
 # non-root runtime user (HOME=/tmp, UID 1000:0)
@@ -127,7 +133,8 @@ RUN set -eux; \
     node --version; \
     forgejo-mcp --help >/dev/null; \
     ocr --help >/dev/null; \
-    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / templ ${TEMPL_VERSION} / forgejo-mcp ${FORGEJO_MCP_VERSION} / open-code-review ${OPEN_CODE_REVIEW_VERSION} / go ${GO_VERSION} / node ${NODE_VERSION}" > /image-extra-versions; \
+    openspec --version; \
+    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / templ ${TEMPL_VERSION} / forgejo-mcp ${FORGEJO_MCP_VERSION} / open-code-review ${OPEN_CODE_REVIEW_VERSION} / openspec ${OPENSPEC_VERSION} / go ${GO_VERSION} / node ${NODE_VERSION}" > /image-extra-versions; \
     rm -rf /tmp/.serena /tmp/.cache/uv
 
 # Restore the base image's non-root runtime user
