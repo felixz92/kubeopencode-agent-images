@@ -37,6 +37,7 @@ env:
   MCP_GRAFANA_VERSION: "2.0.2"
   MCP_VICTORIALOGS_VERSION: "1.9.0"
   GH_CLI_VERSION: "2.94.0"
+  KUSTOMIZE_VERSION: "5.7.1"
   # opencode-telegram-bot: upstream commit to build from (upstream GHCR package
   # is private, so we build our own image)
   OTB_COMMIT: "2801cb8c5d703d7c45f830c1c74a8805355e5749"
@@ -154,6 +155,7 @@ jobs:
             MCP_GRAFANA_VERSION=${{ env.MCP_GRAFANA_VERSION }}
             MCP_VICTORIALOGS_VERSION=${{ env.MCP_VICTORIALOGS_VERSION }}
             GH_CLI_VERSION=${{ env.GH_CLI_VERSION }}
+            KUSTOMIZE_VERSION=${{ env.KUSTOMIZE_VERSION }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-homelab:latest
             ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-homelab:tf${{ env.TERRAFORM_VERSION }}-talosctl${{ env.TALOSCTL_VERSION }}

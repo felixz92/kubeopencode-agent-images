@@ -27,6 +27,7 @@ ARG FLUX_OPERATOR_MCP_VERSION
 ARG MCP_GRAFANA_VERSION
 ARG MCP_VICTORIALOGS_VERSION
 ARG GH_CLI_VERSION
+ARG KUSTOMIZE_VERSION
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -81,6 +82,10 @@ RUN set -eux; \
       | tar -xz -C /tmp; \
     mv "/tmp/gh_${GH_CLI_VERSION}_linux_${karch}/bin/gh" /out/gh; \
     rm -rf "/tmp/gh_${GH_CLI_VERSION}_linux_${karch}"; \
+    # kustomize
+    curl --retry 5 --retry-delay 3 --retry-all-errors -fsSL \
+      "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_${karch}.tar.gz" \
+      | tar -xz -C /out kustomize; \
     chmod +x /out/*
 
 FROM debian:bookworm
@@ -94,6 +99,7 @@ ARG FLUX_OPERATOR_MCP_VERSION
 ARG MCP_GRAFANA_VERSION
 ARG MCP_VICTORIALOGS_VERSION
 ARG GH_CLI_VERSION
+ARG KUSTOMIZE_VERSION
 # krew: single-arch tool, asset naming differs from GOARCH for amd64
 ARG KREW_VERSION=v0.5.0
 
@@ -159,6 +165,7 @@ RUN set -eux; \
     # the binary is executable and starts in stdio mode, then close its stdin
     VL_INSTANCE_ENTRYPOINT=http://localhost:9428 timeout 5 mcp-victorialogs </dev/null >/dev/null 2>&1 || true; \
     gh --version | head -1; \
+    kustomize version; \
     command -v mcp-victorialogs >/dev/null; \
-    echo "kubectl v${KUBECTL_VERSION} / flux v${FLUX_VERSION} / terraform ${TERRAFORM_VERSION} / talosctl v${TALOSCTL_VERSION} / krew ${KREW_VERSION} / kubernetes-mcp-server v${K8S_MCP_VERSION} / flux-operator-mcp v${FLUX_OPERATOR_MCP_VERSION} / mcp-grafana v${MCP_GRAFANA_VERSION} / mcp-victorialogs v${MCP_VICTORIALOGS_VERSION} / gh v${GH_CLI_VERSION}" \
+    echo "kubectl v${KUBECTL_VERSION} / flux v${FLUX_VERSION} / terraform ${TERRAFORM_VERSION} / talosctl v${TALOSCTL_VERSION} / krew ${KREW_VERSION} / kubernetes-mcp-server v${K8S_MCP_VERSION} / flux-operator-mcp v${FLUX_OPERATOR_MCP_VERSION} / mcp-grafana v${MCP_GRAFANA_VERSION} / mcp-victorialogs v${MCP_VICTORIALOGS_VERSION} / gh v${GH_CLI_VERSION} / kustomize v${KUSTOMIZE_VERSION}" \
       > /home/opencode/image-extra-versions
