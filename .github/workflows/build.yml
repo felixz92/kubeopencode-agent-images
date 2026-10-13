@@ -24,7 +24,7 @@ env:
   TEMPL_VERSION: "v0.3.977"
   FORGEJO_MCP_VERSION: "v3.2.0"
   OPEN_CODE_REVIEW_VERSION: "1.12.13"
-  # CI executor image (builder/)
+  # CI executor image (builder/golang, agents/reviewer)
   TASK_VERSION: "3.45.4"
   # homelab executor image (agents/homelab)
   KUBECTL_VERSION: "1.37.1"
@@ -195,7 +195,7 @@ jobs:
         run: |
           echo "executorImage: ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-builder:go${GO_VERSION}-task${TASK_VERSION}-${{ steps.stamp.outputs.stamp }}" >> "$GITHUB_STEP_SUMMARY"
 
-  builder-nodejs:
+  reviewer:
     runs-on: ubuntu-latest
     outputs:
       stamp: ${{ steps.stamp.outputs.stamp }}
@@ -214,19 +214,19 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v7
         with:
-          context: builder/nodejs
+          context: agents/reviewer
           platforms: linux/amd64,linux/arm64
           push: true
           build-args: |
             NODE_VERSION=${{ env.NODE_VERSION }}
             OPEN_CODE_REVIEW_VERSION=${{ env.OPEN_CODE_REVIEW_VERSION }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/argo-nodejs-builder:latest
-            ghcr.io/${{ github.repository_owner }}/argo-nodejs-builder:node${{ env.NODE_VERSION }}-ocr${{ env.OPEN_CODE_REVIEW_VERSION }}
-            ghcr.io/${{ github.repository_owner }}/argo-nodejs-builder:node${{ env.NODE_VERSION }}-ocr${{ env.OPEN_CODE_REVIEW_VERSION }}-${{ steps.stamp.outputs.stamp }}
+            ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-reviewer:latest
+            ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-reviewer:node${{ env.NODE_VERSION }}-ocr${{ env.OPEN_CODE_REVIEW_VERSION }}
+            ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-reviewer:node${{ env.NODE_VERSION }}-ocr${{ env.OPEN_CODE_REVIEW_VERSION }}-${{ steps.stamp.outputs.stamp }}
       - name: Summary
         run: |
-          echo "executorImage: ghcr.io/${{ github.repository_owner }}/argo-nodejs-builder:node${NODE_VERSION}-ocr${OPEN_CODE_REVIEW_VERSION}-${{ steps.stamp.outputs.stamp }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "executorImage: ghcr.io/${{ github.repository_owner }}/kubeopencode-agent-reviewer:node${NODE_VERSION}-ocr${OPEN_CODE_REVIEW_VERSION}-${{ steps.stamp.outputs.stamp }}" >> "$GITHUB_STEP_SUMMARY"
 
   opencode-telegram-bot:
     runs-on: ubuntu-latest

@@ -15,6 +15,7 @@ the upstream Dockerfiles that download OpenCode `1.18.35`.
 | `ghcr.io/felixz92/kubeopencode-agent-attach` | Lightweight Task Pod image for `--attach` mode |
 | `ghcr.io/felixz92/kubeopencode-agent-devbox` | Executor (worker) image: upstream devbox + `uv`/`uvx` + pre-installed Serena MCP server |
 | `ghcr.io/felixz92/kubeopencode-agent-homelab` | Executor (worker) image for homelab ops: Debian bookworm + kubectl/krew (cnpg, cert-manager plugins), Flux CLI, Terraform, talosctl, and pre-installed MCP servers (kubernetes-mcp-server, flux-operator-mcp, mcp-grafana, mcp-victorialogs) |
+| `ghcr.io/felixz92/kubeopencode-agent-reviewer` | CI executor image for reviews with ocr (`agents/reviewer`): Node.js + npm with `open-code-review` pre-installed |
 | `ghcr.io/felixz92/kubeopencode-telegram-bot` | Standalone [opencode-telegram-bot](https://github.com/grinev/opencode-telegram-bot) image (Telegram client for an agent's `opencode serve`) |
 
 Tagged with the OpenCode version (`1.18.35`) and `latest`. Built for
