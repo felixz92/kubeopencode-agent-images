@@ -16,6 +16,8 @@ ARG NODE_VERSION=26
 ARG OPEN_CODE_REVIEW_VERSION=1.12.13
 # open-code-review-forgejo (https://github.com/felixz92/open-code-review-forgejo)
 ARG OPEN_CODE_REVIEW_FORGEJO_VERSION=v0.1.0
+# forgejo-mcp (git.b4mad.industries/agentic-forges/forgejo-mcp), prebuilt release binary
+ARG FORGEJO_MCP_VERSION=v3.2.0
 
 FROM node:${NODE_VERSION}-bookworm
 
@@ -24,6 +26,12 @@ ARG OPEN_CODE_REVIEW_FORGEJO_VERSION
 
 # open-code-review: global npm package. Binary on PATH is `ocr`.
 RUN npm install -g @alibaba-group/open-code-review@${OPEN_CODE_REVIEW_VERSION}
+
+# forgejo-mcp: prebuilt release binary onto the global PATH
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    curl -fsSL "https://git.b4mad.industries/agentic-forges/forgejo-mcp/releases/download/${FORGEJO_MCP_VERSION}/forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}.tar.gz" \
+      | tar -xz --strip-components=1 -C /usr/local/bin "forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}/forgejo-mcp" \
 
 # open-code-review-forgejo: standalone binary from GitHub releases. Binary on
 # PATH is `ocr-forgejo` (kept separate from `ocr`). Target arch is resolved
@@ -45,4 +53,4 @@ RUN set -eux; \
     npm --version; \
     ocr --help >/dev/null; \
     ocr-forgejo -h >/dev/null 2>&1 || true; \
-    echo "node $(node --version) / open-code-review ${OPEN_CODE_REVIEW_VERSION} / open-code-review-forgejo ${OPEN_CODE_REVIEW_FORGEJO_VERSION}" > /image-extra-versions
+    echo "node $(node --version) / open-code-review ${OPEN_CODE_REVIEW_VERSION} / open-code-review-forgejo ${OPEN_CODE_REVIEW_FORGEJO_VERSION} / forgejo-mcp ${FORGEJO_MCP_VERSION}" > /image-extra-versions
