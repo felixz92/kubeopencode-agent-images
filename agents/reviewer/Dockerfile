@@ -23,6 +23,7 @@ FROM node:${NODE_VERSION}-bookworm
 
 ARG OPEN_CODE_REVIEW_VERSION
 ARG OPEN_CODE_REVIEW_FORGEJO_VERSION
+ARG FORGEJO_MCP_VERSION
 
 # open-code-review: global npm package. Binary on PATH is `ocr`.
 RUN npm install -g @alibaba-group/open-code-review@${OPEN_CODE_REVIEW_VERSION}
