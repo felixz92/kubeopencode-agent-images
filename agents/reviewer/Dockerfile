@@ -31,7 +31,7 @@ RUN npm install -g @alibaba-group/open-code-review@${OPEN_CODE_REVIEW_VERSION}
 RUN set -eux; \
     arch="$(dpkg --print-architecture)"; \
     curl -fsSL "https://git.b4mad.industries/agentic-forges/forgejo-mcp/releases/download/${FORGEJO_MCP_VERSION}/forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}.tar.gz" \
-      | tar -xz --strip-components=1 -C /usr/local/bin "forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}/forgejo-mcp" \
+      | tar -xz --strip-components=1 -C /usr/local/bin "forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}/forgejo-mcp"
 
 # open-code-review-forgejo: standalone binary from GitHub releases. Binary on
 # PATH is `ocr-forgejo` (kept separate from `ocr`). Target arch is resolved
