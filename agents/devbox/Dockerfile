@@ -3,6 +3,8 @@
 # Layered on the upstream devbox image (full development environment) with:
 # - uv / uvx (Astral) for Python tool management
 # - Serena (semantic code intelligence MCP server) pre-installed as a uv tool
+# - forgejo-mcp (git.b4mad.industries/agentic-forges/forgejo-mcp)
+# - github-mcp-server (github/github/github-mcp-server)
 #
 # This is the executor (worker) container image: it runs /tools/opencode and
 # spawns MCP servers. The upstream devbox image ships no uv/uvx, which broke
@@ -21,6 +23,8 @@ ARG GOLANGCI_LINT_VERSION=v2.14.0
 ARG TEMPL_VERSION=v0.3.977
 # forgejo-mcp (git.b4mad.industries/agentic-forges/forgejo-mcp), prebuilt release binary
 ARG FORGEJO_MCP_VERSION=v3.2.0
+# github-mcp-server (github/github/github-mcp-server), prebuilt release binary
+ARG GITHUB_MCP_SERVER_VERSION=v2.0.2
 # open-code-review (https://github.com/alibaba/open-code-review) via npm
 ARG OPEN_CODE_REVIEW_VERSION=1.12.13
 # openspec (https://github.com/Fission-AI/OpenSpec) via npm
@@ -40,6 +44,7 @@ ARG SERENA_VERSION
 ARG GOLANGCI_LINT_VERSION
 ARG TEMPL_VERSION
 ARG FORGEJO_MCP_VERSION
+ARG GITHUB_MCP_SERVER_VERSION
 ARG OPEN_CODE_REVIEW_VERSION
 ARG OPENSPEC_VERSION
 ARG GO_VERSION
@@ -101,6 +106,14 @@ RUN set -eux; \
     curl -fsSL "https://git.b4mad.industries/agentic-forges/forgejo-mcp/releases/download/${FORGEJO_MCP_VERSION}/forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}.tar.gz" \
       | tar -xz --strip-components=1 -C /usr/local/bin "forgejo-mcp_${FORGEJO_MCP_VERSION#v}_linux_${arch}/forgejo-mcp"
 
+# github-mcp-server: prebuilt release binary onto the global PATH (the
+# tarball contains the binary at its root, no subdirectory)
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    case "${arch}" in amd64) tarch=x86_64 ;; arm64) tarch=arm64 ;; esac; \
+    curl -fsSL "https://github.com/github/github-mcp-server/releases/download/${GITHUB_MCP_SERVER_VERSION}/github-mcp-server_Linux_${tarch}.tar.gz" \
+      | tar -xz -C /usr/local/bin github-mcp-server
+
 # open-code-review: global npm package (npm was installed above).
 # Binary on PATH is `ocr`.
 RUN npm install -g @alibaba-group/open-code-review@${OPEN_CODE_REVIEW_VERSION}
@@ -132,9 +145,10 @@ RUN set -eux; \
     go version; \
     node --version; \
     forgejo-mcp --help >/dev/null; \
+    github-mcp-server --help >/dev/null; \
     ocr --help >/dev/null; \
     openspec --version; \
-    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / templ ${TEMPL_VERSION} / forgejo-mcp ${FORGEJO_MCP_VERSION} / open-code-review ${OPEN_CODE_REVIEW_VERSION} / openspec ${OPENSPEC_VERSION} / go ${GO_VERSION} / node ${NODE_VERSION}" > /image-extra-versions; \
+    echo "uv ${UV_VERSION} / serena ${SERENA_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / templ ${TEMPL_VERSION} / forgejo-mcp ${FORGEJO_MCP_VERSION} / github-mcp-server ${GITHUB_MCP_SERVER_VERSION} / open-code-review ${OPEN_CODE_REVIEW_VERSION} / openspec ${OPENSPEC_VERSION} / go ${GO_VERSION} / node ${NODE_VERSION}" > /image-extra-versions; \
     rm -rf /tmp/.serena /tmp/.cache/uv
 
 # Restore the base image's non-root runtime user
