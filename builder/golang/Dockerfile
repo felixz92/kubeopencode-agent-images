@@ -17,10 +17,12 @@ ARG TASK_VERSION=3.54.0
 # https://golangci-lint.run/docs/welcome/install/local/#install-from-binary-releases)
 ARG GOLANGCI_LINT_VERSION=v2.14.0
 
+ARG NODE_VERSION=26
 FROM golang:1.26-bookworm
 
 ARG TASK_VERSION
 ARG GOLANGCI_LINT_VERSION
+ARG NODE_VERSION
 ARG TARGETARCH
 
 # Task (go-task): prebuilt release binary onto the global PATH
@@ -36,9 +38,16 @@ RUN set -eux; \
     curl -fsSL "https://github.com/golangci/golangci-lint/releases/download/${GOLANGCI_LINT_VERSION}/golangci-lint-${ver}-linux-${arch}.tar.gz" \
       | tar -xz --strip-components=1 -C /usr/local/bin "golangci-lint-${ver}-linux-${arch}/golangci-lint"
 
+# Node: reinstall via NodeSource apt repository (upstream image ships an
+# older distro node)
+RUN set -eux; \
+    curl -fsSL "https://deb.nodesource.com/setup_${NODE_VERSION}.x" | bash -; \
+    apt-get install -y --no-install-recommends nodejs ripgrep; \
+    rm -rf /var/lib/apt/lists/*
+
 # Sanity checks + record versions
 RUN set -eux; \
     go version; \
     task --version; \
     golangci-lint version; \
-    echo "go $(go version | awk '{print $3}') / task ${TASK_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION}" > /image-extra-versions
+    echo "go $(go version | awk '{print $3}') / task ${TASK_VERSION} / golangci-lint ${GOLANGCI_LINT_VERSION} / node ${NODE_VERSION}" > /image-extra-versions
