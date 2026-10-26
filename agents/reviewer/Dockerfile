@@ -15,7 +15,7 @@ ARG NODE_VERSION=26
 # open-code-review (https://github.com/alibaba/open-code-review) via npm
 ARG OPEN_CODE_REVIEW_VERSION=1.12.13
 # open-code-review-forgejo (https://github.com/felixz92/open-code-review-forgejo)
-ARG OPEN_CODE_REVIEW_FORGEJO_VERSION=v0.2.0
+ARG OPEN_CODE_REVIEW_FORGEJO_VERSION=v0.3.0
 # forgejo-mcp (git.b4mad.industries/agentic-forges/forgejo-mcp), prebuilt release binary
 ARG FORGEJO_MCP_VERSION=v3.2.0
 
