@@ -95,7 +95,7 @@ RUN set -eux; \
     rm -rf "/tmp/linux-${karch}"; \
     chmod +x /out/*
 
-FROM debian:bookworm
+FROM debian:trixie
 
 ARG KUBECTL_VERSION
 ARG FLUX_VERSION
