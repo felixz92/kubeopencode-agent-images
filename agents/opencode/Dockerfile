@@ -41,7 +41,7 @@ RUN set -ex; \
     rm -f /tmp/opencode.tar.gz; \
     /opencode --version | tee /opencode-version
 
-FROM alpine:3.24.3
+FROM alpine:3.24.4
 
 ENV TOOLS_DIR=/tools
 ENV OPENCODE_BIN=opencode
