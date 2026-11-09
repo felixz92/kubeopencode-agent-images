@@ -36,7 +36,7 @@ ARG NODE_VERSION=26
 
 # Pinned by digest (resolved from ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest
 # at build time). Bump deliberately when bumping UV_VERSION/SERENA_VERSION.
-FROM ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest@sha256:66d36238d9c8a4adf54b72a01af096f5aaefd7e0bf115f3af9287dd1af91a355
+FROM ghcr.io/kubeopencode/kubeopencode-agent-devbox:latest@sha256:1be2d086185e06572622d2ab87aa6eb93e6031c7c18953c0551869a39a617669
 
 # Versions are declared as global ARGs above; re-declare the ones used below.
 ARG UV_VERSION
